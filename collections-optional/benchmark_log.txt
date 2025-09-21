@@ -1,0 +1,10 @@
+goos: windows
+goarch: amd64
+pkg: github.com/PJutch/go-homework/collections-optional
+cpu: 13th Gen Intel(R) Core(TM) i7-13700HX
+BenchmarkCloneSliceNaive-24      	   17862	     66547 ns/op
+BenchmarkCloneSliceReserve-24    	   71610	     16500 ns/op
+BenchmarkCloneMapNaive-24        	    1394	    907761 ns/op
+BenchmarkCloneMapReserve-24      	    2467	    594942 ns/op
+PASS
+ok  	github.com/PJutch/go-homework/collections-optional	6.553s
