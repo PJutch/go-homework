@@ -1,0 +1,33 @@
+package main
+
+type LibraryImpl struct {
+	storage     BookStorage
+	idGenerator IdGenerator
+	idByTitle   map[string]BookId
+}
+
+func MakeLibrary(idGenerator IdGenerator) Library {
+	return &LibraryImpl{MakeBookStorage(), idGenerator, make(map[string]BookId)}
+}
+
+func (library *LibraryImpl) GetBook(title string) (*Book, bool) {
+	if id, ok := library.idByTitle[title]; ok {
+		return library.storage.GetBook(id)
+	} else {
+		return nil, false
+	}
+}
+
+func (library *LibraryImpl) AddBook(book Book) {
+	id := library.idGenerator(book, library.storage)
+	library.idByTitle[book.Title] = id
+	library.storage.AddBook(id, book)
+}
+
+func (library *LibraryImpl) SetStorage(storage BookStorage) {
+	library.storage = storage
+}
+
+func (library *LibraryImpl) SetIdGenerator(idGenerator IdGenerator) {
+	library.idGenerator = idGenerator
+}
