@@ -1,4 +1,4 @@
-package library
+package main
 
 type LibraryImpl struct {
 	storage     BookStorage
@@ -6,9 +6,13 @@ type LibraryImpl struct {
 	idByTitle   map[string]BookId
 }
 
+func MakeLibrary(idGenerator IdGenerator) Library {
+	return &LibraryImpl{MakeBookStorage(), idGenerator, make(map[string]BookId)}
+}
+
 func (library *LibraryImpl) GetBook(title string) (*Book, bool) {
 	if id, ok := library.idByTitle[title]; ok {
-		return library.storage.GetBook(id), true
+		return library.storage.GetBook(id)
 	} else {
 		return nil, false
 	}

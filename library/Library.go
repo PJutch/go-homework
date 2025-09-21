@@ -1,4 +1,4 @@
-package library
+package main
 
 type IdGenerator func(title Book, bookStorage BookStorage) BookId
 

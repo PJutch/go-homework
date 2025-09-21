@@ -1,8 +1,12 @@
-package library
+package main
 
 type BookStorageImpl struct {
 	books     []Book
 	indexById map[BookId]int
+}
+
+func MakeBookStorage() BookStorage {
+	return &BookStorageImpl{[]Book{}, make(map[BookId]int)}
 }
 
 func (storage *BookStorageImpl) GetBook(id BookId) (*Book, bool) {
