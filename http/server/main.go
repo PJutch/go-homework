@@ -37,7 +37,7 @@ func (state *ServerState) handleVersionRequest(w http.ResponseWriter, r *http.Re
 	defer state.wg.Done()
 
 	if r.Method == http.MethodGet {
-		fmt.Fprint(w, "0.0.1")
+		fmt.Fprint(w, "v0.0.1")
 	}
 }
 
@@ -93,7 +93,7 @@ func (state *ServerState) handleHardOp(w http.ResponseWriter, r *http.Request) {
 		if randBool(0.5) {
 			w.WriteHeader(200)
 		} else {
-			w.WriteHeader(randIntInRange(500, 527))
+			w.WriteHeader(randIntInRange(500, 512))
 		}
 	}
 }
