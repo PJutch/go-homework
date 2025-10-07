@@ -2,10 +2,12 @@ package main
 
 import (
 	"bytes"
+	"context"
 	"encoding/json"
 	"fmt"
 	"io"
 	"net/http"
+	"time"
 )
 
 func GetVersion(url string) (string, error) {
@@ -61,12 +63,24 @@ func SendDecodeRequest(url string, input string) (string, error) {
 	return string(output.OutputString), nil
 }
 
-func RequestHardOp(url string) (string, error) {
-	resp, err := http.Get(url)
+func RequestHardOp(url string) (int, error) {
+	ctx, cancel := context.WithTimeout(context.Background(), 15*time.Second)
+	defer cancel()
+
+	req, err := http.NewRequestWithContext(ctx, "GET", url, nil)
 	if err != nil {
-		return "", err
+		return 0, err
 	}
-	return resp.Status, nil
+
+	client := http.Client{}
+	resp, err := client.Do(req)
+
+	if err != nil {
+		return 0, err
+	}
+	defer resp.Body.Close()
+
+	return resp.StatusCode, nil
 }
 
 func main() {
@@ -86,8 +100,8 @@ func main() {
 
 	status, err := RequestHardOp("http://:8080/hard-op")
 	if err == nil {
-		fmt.Println(status)
+		fmt.Println(true, status)
 	} else {
-		fmt.Println(err)
+		fmt.Println(false)
 	}
 }
