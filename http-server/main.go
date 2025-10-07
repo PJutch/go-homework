@@ -5,8 +5,22 @@ import (
 	"encoding/json"
 	"fmt"
 	"io"
+	"math/rand"
 	"net/http"
+	"time"
 )
+
+func randIntInRange(from int /* inclusive */, to int /* exclusive */) int {
+	return rand.Intn(to-from) + from
+}
+
+func randFloatInRange(from float64 /* inclusive */, to float64 /* exclusive */) float64 {
+	return rand.Float64()*(from-to) + to
+}
+
+func randBool(trueChance float64) bool {
+	return rand.Float64() < trueChance
+}
 
 type JsonInput struct {
 	InputString string `json:"inputString"`
@@ -50,6 +64,17 @@ func main() {
 			}
 
 			w.Write(response)
+		}
+	})
+	http.HandleFunc("/hard-op", func(w http.ResponseWriter, r *http.Request) {
+		if r.Method == http.MethodGet {
+			time.Sleep(time.Duration(randFloatInRange(10, 20)) * time.Second)
+
+			if randBool(0.5) {
+				w.WriteHeader(200)
+			} else {
+				w.WriteHeader(randIntInRange(500, 527))
+			}
 		}
 	})
 
