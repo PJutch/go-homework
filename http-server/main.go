@@ -1,12 +1,17 @@
 package main
 
 import (
+	"context"
 	"encoding/base64"
 	"encoding/json"
 	"fmt"
 	"io"
 	"math/rand"
 	"net/http"
+	"os"
+	"os/signal"
+	"sync"
+	"syscall"
 	"time"
 )
 
@@ -22,7 +27,15 @@ func randBool(trueChance float64) bool {
 	return rand.Float64() < trueChance
 }
 
-func handleVersionRequest(w http.ResponseWriter, r *http.Request) {
+type ServerState struct {
+	server http.Server
+	wg     sync.WaitGroup
+}
+
+func (state *ServerState) handleVersionRequest(w http.ResponseWriter, r *http.Request) {
+	state.wg.Add(1)
+	defer state.wg.Done()
+
 	if r.Method == http.MethodGet {
 		fmt.Fprint(w, "0.0.1")
 	}
@@ -36,7 +49,10 @@ type jsonOutput struct {
 	OutputString string `json:"outputString"`
 }
 
-func handleDecodeRequest(w http.ResponseWriter, r *http.Request) {
+func (state *ServerState) handleDecodeRequest(w http.ResponseWriter, r *http.Request) {
+	state.wg.Add(1)
+	defer state.wg.Done()
+
 	if r.Method == http.MethodPost {
 		body, err := io.ReadAll(r.Body)
 		if err != nil {
@@ -67,7 +83,10 @@ func handleDecodeRequest(w http.ResponseWriter, r *http.Request) {
 	}
 }
 
-func handleHardOp(w http.ResponseWriter, r *http.Request) {
+func (state *ServerState) handleHardOp(w http.ResponseWriter, r *http.Request) {
+	state.wg.Add(1)
+	defer state.wg.Done()
+
 	if r.Method == http.MethodGet {
 		time.Sleep(time.Duration(randFloatInRange(10, 20)) * time.Second)
 
@@ -80,12 +99,38 @@ func handleHardOp(w http.ResponseWriter, r *http.Request) {
 }
 
 func main() {
-	http.HandleFunc("/version", handleVersionRequest)
-	http.HandleFunc("/decode", handleDecodeRequest)
-	http.HandleFunc("/hard-op", handleHardOp)
+	fmt.Println("Starting...")
 
-	err := http.ListenAndServe(":8081", nil)
-	if err != nil {
+	state := ServerState{http.Server{Addr: ":8080"}, sync.WaitGroup{}}
+
+	http.HandleFunc("/version", state.handleVersionRequest)
+	http.HandleFunc("/decode", state.handleDecodeRequest)
+	http.HandleFunc("/hard-op", state.handleHardOp)
+
+	go func() {
+		fmt.Println("Started")
+
+		err := state.server.ListenAndServe()
+		if err != nil {
+			fmt.Println(err)
+		}
+	}()
+
+	stop := make(chan os.Signal, 1)
+	signal.Notify(stop, os.Interrupt, syscall.SIGTERM)
+	<-stop
+
+	fmt.Println("Shutting down...")
+
+	ctx, cancel := context.WithTimeout(context.Background(), 30*time.Second)
+	defer cancel()
+	if err := state.server.Shutdown(ctx); err != nil {
 		fmt.Println(err)
+		return
 	}
+
+	fmt.Println("Server shut down")
+
+	state.wg.Wait()
+	fmt.Println("Wg waited out")
 }
