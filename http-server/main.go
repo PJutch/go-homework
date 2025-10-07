@@ -22,61 +22,67 @@ func randBool(trueChance float64) bool {
 	return rand.Float64() < trueChance
 }
 
-type JsonInput struct {
+func handleVersionRequest(w http.ResponseWriter, r *http.Request) {
+	if r.Method == http.MethodGet {
+		fmt.Fprint(w, "0.0.1")
+	}
+}
+
+type jsonInput struct {
 	InputString string `json:"inputString"`
 }
 
-type JsonOutput struct {
+type jsonOutput struct {
 	OutputString string `json:"outputString"`
 }
 
+func handleDecodeRequest(w http.ResponseWriter, r *http.Request) {
+	if r.Method == http.MethodPost {
+		body, err := io.ReadAll(r.Body)
+		if err != nil {
+			fmt.Println(err)
+			return
+		}
+
+		var input jsonInput
+		err2 := json.Unmarshal(body, &input)
+		if err2 != nil {
+			fmt.Println(err2)
+			return
+		}
+
+		outputBytes, err := base64.StdEncoding.DecodeString(input.InputString)
+		if err != nil {
+			fmt.Println(err)
+			return
+		}
+
+		response, err := json.Marshal(jsonOutput{string(outputBytes)})
+		if err != nil {
+			fmt.Println(err)
+			return
+		}
+
+		w.Write(response)
+	}
+}
+
+func handleHardOp(w http.ResponseWriter, r *http.Request) {
+	if r.Method == http.MethodGet {
+		time.Sleep(time.Duration(randFloatInRange(10, 20)) * time.Second)
+
+		if randBool(0.5) {
+			w.WriteHeader(200)
+		} else {
+			w.WriteHeader(randIntInRange(500, 527))
+		}
+	}
+}
+
 func main() {
-	http.HandleFunc("/version", func(w http.ResponseWriter, r *http.Request) {
-		if r.Method == http.MethodGet {
-			fmt.Fprint(w, "0.0.1")
-		}
-	})
-	http.HandleFunc("/decode", func(w http.ResponseWriter, r *http.Request) {
-		if r.Method == http.MethodPost {
-			body, err := io.ReadAll(r.Body)
-			if err != nil {
-				fmt.Println(err)
-				return
-			}
-
-			var input JsonInput
-			err2 := json.Unmarshal(body, &input)
-			if err2 != nil {
-				fmt.Println(err2)
-				return
-			}
-
-			outputBytes, err := base64.StdEncoding.DecodeString(input.InputString)
-			if err != nil {
-				fmt.Println(err)
-				return
-			}
-
-			response, err := json.Marshal(JsonOutput{string(outputBytes)})
-			if err != nil {
-				fmt.Println(err)
-				return
-			}
-
-			w.Write(response)
-		}
-	})
-	http.HandleFunc("/hard-op", func(w http.ResponseWriter, r *http.Request) {
-		if r.Method == http.MethodGet {
-			time.Sleep(time.Duration(randFloatInRange(10, 20)) * time.Second)
-
-			if randBool(0.5) {
-				w.WriteHeader(200)
-			} else {
-				w.WriteHeader(randIntInRange(500, 527))
-			}
-		}
-	})
+	http.HandleFunc("/version", handleVersionRequest)
+	http.HandleFunc("/decode", handleDecodeRequest)
+	http.HandleFunc("/hard-op", handleHardOp)
 
 	err := http.ListenAndServe(":8081", nil)
 	if err != nil {
