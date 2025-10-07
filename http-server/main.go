@@ -1,6 +1,7 @@
 package main
 
 import (
+	"encoding/base64"
 	"encoding/json"
 	"fmt"
 	"io"
@@ -36,7 +37,13 @@ func main() {
 				return
 			}
 
-			response, err := json.Marshal(JsonOutput{input.InputString})
+			outputBytes, err := base64.StdEncoding.DecodeString(input.InputString)
+			if err != nil {
+				fmt.Println(err)
+				return
+			}
+
+			response, err := json.Marshal(JsonOutput{string(outputBytes)})
 			if err != nil {
 				fmt.Println(err)
 				return
