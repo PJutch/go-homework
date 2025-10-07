@@ -61,6 +61,14 @@ func SendDecodeRequest(url string, input string) (string, error) {
 	return string(output.OutputString), nil
 }
 
+func RequestHardOp(url string) (string, error) {
+	resp, err := http.Get(url)
+	if err != nil {
+		return "", err
+	}
+	return resp.Status, nil
+}
+
 func main() {
 	version, err := GetVersion("http://:8080/version")
 	if err == nil {
@@ -72,6 +80,13 @@ func main() {
 	decoded, err := SendDecodeRequest("http://:8080/decode", "dGVzdA==")
 	if err == nil {
 		fmt.Println(decoded)
+	} else {
+		fmt.Println(err)
+	}
+
+	status, err := RequestHardOp("http://:8080/hard-op")
+	if err == nil {
+		fmt.Println(status)
 	} else {
 		fmt.Println(err)
 	}
