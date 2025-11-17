@@ -4,9 +4,8 @@ import "fmt"
 
 type BalanceRepository interface {
 	CreateAccount() int
-
 	GetBalance(accountId int) (int, bool)
-
+	GetBalances() map[int]int
 	SetBalance(accountId int, amount int)
 }
 
@@ -16,6 +15,14 @@ type PlainTransactionService struct {
 
 func (service PlainTransactionService) CreateAccount() int {
 	return service.balance.CreateAccount()
+}
+
+func (service PlainTransactionService) GetBalance(accountId int) (int, bool) {
+	return service.balance.GetBalance(accountId)
+}
+
+func (service PlainTransactionService) GetBalances() map[int]int {
+	return service.balance.GetBalances()
 }
 
 func (service PlainTransactionService) Deposit(accountId int, moneyAmount int) error {
