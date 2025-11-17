@@ -1,4 +1,4 @@
-package main
+package services
 
 import "fmt"
 
@@ -10,19 +10,19 @@ type BalanceRepository interface {
 }
 
 type PlainTransactionService struct {
-	balance BalanceRepository
+	Repo BalanceRepository
 }
 
 func (service PlainTransactionService) CreateAccount() int {
-	return service.balance.CreateAccount()
+	return service.Repo.CreateAccount()
 }
 
 func (service PlainTransactionService) GetBalance(accountId int) (int, bool) {
-	return service.balance.GetBalance(accountId)
+	return service.Repo.GetBalance(accountId)
 }
 
 func (service PlainTransactionService) GetBalances() map[int]int {
-	return service.balance.GetBalances()
+	return service.Repo.GetBalances()
 }
 
 func (service PlainTransactionService) Deposit(accountId int, moneyAmount int) error {
@@ -30,8 +30,8 @@ func (service PlainTransactionService) Deposit(accountId int, moneyAmount int) e
 		return fmt.Errorf("negative money amount (%v) deposit", moneyAmount)
 	}
 
-	if balance, ok := service.balance.GetBalance(accountId); ok {
-		service.balance.SetBalance(accountId, balance+moneyAmount)
+	if balance, ok := service.Repo.GetBalance(accountId); ok {
+		service.Repo.SetBalance(accountId, balance+moneyAmount)
 		return nil
 	} else {
 		return fmt.Errorf("user %v not found", accountId)
@@ -43,13 +43,13 @@ func (service PlainTransactionService) Withdraw(accountId int, moneyAmount int) 
 		return fmt.Errorf("negative money amount (%v) withdraw", moneyAmount)
 	}
 
-	if balance, ok := service.balance.GetBalance(accountId); ok {
+	if balance, ok := service.Repo.GetBalance(accountId); ok {
 		balance -= moneyAmount
 		if balance < 0 {
 			return fmt.Errorf("not enough money to wtihdraw %v", moneyAmount)
 		}
 
-		service.balance.SetBalance(accountId, balance)
+		service.Repo.SetBalance(accountId, balance)
 		return nil
 	} else {
 		return fmt.Errorf("user %v not found", accountId)
@@ -61,12 +61,12 @@ func (service PlainTransactionService) Transfer(fromId int, toId int, moneyAmoun
 		return fmt.Errorf("negative money amount (%v) transfer", moneyAmount)
 	}
 
-	fromBalance, ok := service.balance.GetBalance(fromId)
+	fromBalance, ok := service.Repo.GetBalance(fromId)
 	if !ok {
 		return fmt.Errorf("user %v not found", fromId)
 	}
 
-	toBalance, ok := service.balance.GetBalance(toId)
+	toBalance, ok := service.Repo.GetBalance(toId)
 	if !ok {
 		return fmt.Errorf("user %v not found", toId)
 	}
@@ -78,8 +78,8 @@ func (service PlainTransactionService) Transfer(fromId int, toId int, moneyAmoun
 		return fmt.Errorf("not enough money to transfer %v", moneyAmount)
 	}
 
-	service.balance.SetBalance(fromId, fromBalance)
-	service.balance.SetBalance(toId, toBalance)
+	service.Repo.SetBalance(fromId, fromBalance)
+	service.Repo.SetBalance(toId, toBalance)
 
 	return nil
 }

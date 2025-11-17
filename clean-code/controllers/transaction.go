@@ -1,4 +1,4 @@
-package main
+package controllers
 
 import (
 	"encoding/json"
@@ -20,8 +20,8 @@ type TransactionService interface {
 }
 
 type TransactionController struct {
-	service TransactionService
-	wg      *sync.WaitGroup
+	Service TransactionService
+	Wg      *sync.WaitGroup
 }
 
 type accountData struct {
@@ -29,11 +29,11 @@ type accountData struct {
 }
 
 func (controller TransactionController) AllAccountsRequests(w http.ResponseWriter, r *http.Request) {
-	controller.wg.Add(1)
-	defer controller.wg.Done()
+	controller.Wg.Add(1)
+	defer controller.Wg.Done()
 
 	if r.Method == "POST" {
-		id := controller.service.CreateAccount()
+		id := controller.Service.CreateAccount()
 
 		data, err := json.Marshal(id)
 		if err != nil {
@@ -43,7 +43,7 @@ func (controller TransactionController) AllAccountsRequests(w http.ResponseWrite
 		w.WriteHeader(http.StatusCreated)
 		w.Write(data)
 	} else if r.Method == "GET" {
-		balances := controller.service.GetBalances()
+		balances := controller.Service.GetBalances()
 
 		accounts := map[int]accountData{}
 		for id, balance := range balances {
@@ -62,8 +62,8 @@ func (controller TransactionController) AllAccountsRequests(w http.ResponseWrite
 }
 
 func (controller TransactionController) GetAccountData(w http.ResponseWriter, r *http.Request) {
-	controller.wg.Add(1)
-	defer controller.wg.Done()
+	controller.Wg.Add(1)
+	defer controller.Wg.Done()
 
 	if r.Method != "GET" {
 		http.Error(w, "only GET method is allowed for this endpoint", http.StatusMethodNotAllowed)
@@ -81,7 +81,7 @@ func (controller TransactionController) GetAccountData(w http.ResponseWriter, r 
 		return
 	}
 
-	balance, ok := controller.service.GetBalance(id)
+	balance, ok := controller.Service.GetBalance(id)
 	if !ok {
 		http.Error(w, fmt.Sprintf("account %v doesn't exist", id), http.StatusBadRequest)
 		return
@@ -102,8 +102,8 @@ type depositRequest struct {
 }
 
 func (controller TransactionController) Deposit(w http.ResponseWriter, r *http.Request) {
-	controller.wg.Add(1)
-	defer controller.wg.Done()
+	controller.Wg.Add(1)
+	defer controller.Wg.Done()
 
 	if r.Method != "POST" {
 		http.Error(w, "only POST method is allowed for this endpoint", http.StatusMethodNotAllowed)
@@ -123,7 +123,7 @@ func (controller TransactionController) Deposit(w http.ResponseWriter, r *http.R
 		return
 	}
 
-	err = controller.service.Deposit(parsed.AccountId, parsed.MoneyAmount)
+	err = controller.Service.Deposit(parsed.AccountId, parsed.MoneyAmount)
 	if err != nil {
 		http.Error(w, err.Error(), http.StatusBadRequest)
 		return
@@ -138,8 +138,8 @@ type withdrawRequest struct {
 }
 
 func (controller TransactionController) Withdraw(w http.ResponseWriter, r *http.Request) {
-	controller.wg.Add(1)
-	defer controller.wg.Done()
+	controller.Wg.Add(1)
+	defer controller.Wg.Done()
 
 	if r.Method != "POST" {
 		http.Error(w, "only POST method is allowed for this endpoint", http.StatusMethodNotAllowed)
@@ -159,7 +159,7 @@ func (controller TransactionController) Withdraw(w http.ResponseWriter, r *http.
 		return
 	}
 
-	err = controller.service.Withdraw(parsed.AccountId, parsed.MoneyAmount)
+	err = controller.Service.Withdraw(parsed.AccountId, parsed.MoneyAmount)
 	if err != nil {
 		http.Error(w, err.Error(), http.StatusBadRequest)
 		return
@@ -175,8 +175,8 @@ type transferRequest struct {
 }
 
 func (controller TransactionController) Transfer(w http.ResponseWriter, r *http.Request) {
-	controller.wg.Add(1)
-	defer controller.wg.Done()
+	controller.Wg.Add(1)
+	defer controller.Wg.Done()
 
 	if r.Method != "POST" {
 		http.Error(w, "only POST method is allowed for this endpoint", http.StatusMethodNotAllowed)
@@ -196,7 +196,7 @@ func (controller TransactionController) Transfer(w http.ResponseWriter, r *http.
 		return
 	}
 
-	err = controller.service.Transfer(parsed.FromId, parsed.ToId, parsed.MoneyAmount)
+	err = controller.Service.Transfer(parsed.FromId, parsed.ToId, parsed.MoneyAmount)
 	if err != nil {
 		http.Error(w, err.Error(), http.StatusBadRequest)
 		return

@@ -1,11 +1,11 @@
-package main
+package repositories
 
 type InMemoryBalanceRepository struct {
 	nextAccountId int
 	balances      map[int]int
 }
 
-func makeInMemoryBalanceRepository() InMemoryBalanceRepository {
+func MakeInMemoryBalanceRepository() InMemoryBalanceRepository {
 	return InMemoryBalanceRepository{nextAccountId: 0, balances: map[int]int{}}
 }
 

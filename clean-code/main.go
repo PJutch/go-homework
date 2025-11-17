@@ -1,6 +1,9 @@
 package main
 
 import (
+	"clean-code/controllers"
+	"clean-code/repositories"
+	"clean-code/services"
 	"context"
 	"fmt"
 	"net/http"
@@ -15,8 +18,14 @@ func main() {
 	server := http.Server{Addr: ":8080"}
 	wg := sync.WaitGroup{}
 
-	balanceRepository := makeInMemoryBalanceRepository()
-	controller := TransactionController{PlainTransactionService{&balanceRepository}, &wg}
+	balanceRepository := repositories.MakeInMemoryBalanceRepository()
+
+	controller := controllers.TransactionController{
+		Service: services.PlainTransactionService{
+			Repo: &balanceRepository,
+		},
+		Wg: &wg,
+	}
 
 	http.HandleFunc("/accounts", controller.AllAccountsRequests)
 	http.HandleFunc("/accounts/", controller.GetAccountData)
