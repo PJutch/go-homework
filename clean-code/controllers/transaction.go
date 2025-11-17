@@ -28,34 +28,42 @@ type accountData struct {
 	Balance int `json:"balance"`
 }
 
+func (controller TransactionController) createAccount(w http.ResponseWriter) {
+	id := controller.Service.CreateAccount()
+
+	data, err := json.Marshal(id)
+	if err != nil {
+		panic("id should be marshallable")
+	}
+
+	w.WriteHeader(http.StatusCreated)
+	w.Write(data)
+}
+
+func (controller TransactionController) getAllAccounts(w http.ResponseWriter) {
+	balances := controller.Service.GetBalances()
+
+	accounts := map[int]accountData{}
+	for id, balance := range balances {
+		accounts[id] = accountData{balance}
+	}
+
+	data, err := json.Marshal(accounts)
+	if err != nil {
+		panic("accounts data should be marshallable")
+	}
+
+	w.Write(data)
+}
+
 func (controller TransactionController) AllAccountsRequests(w http.ResponseWriter, r *http.Request) {
 	controller.Wg.Add(1)
 	defer controller.Wg.Done()
 
 	if r.Method == "POST" {
-		id := controller.Service.CreateAccount()
-
-		data, err := json.Marshal(id)
-		if err != nil {
-			panic("id should be marshallable")
-		}
-
-		w.WriteHeader(http.StatusCreated)
-		w.Write(data)
+		controller.createAccount(w)
 	} else if r.Method == "GET" {
-		balances := controller.Service.GetBalances()
-
-		accounts := map[int]accountData{}
-		for id, balance := range balances {
-			accounts[id] = accountData{balance}
-		}
-
-		data, err := json.Marshal(accounts)
-		if err != nil {
-			panic("accounts data should be marshallable")
-		}
-
-		w.Write(data)
+		controller.getAllAccounts(w)
 	} else {
 		http.Error(w, "only GET and POST method are allowed for this endpoint", http.StatusMethodNotAllowed)
 	}
